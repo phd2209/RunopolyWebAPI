@@ -57,7 +57,7 @@ namespace RunopolyWebAPI.Models
             {
                 conn.Close();
             }
-        }
+        }      
         public bool UserUpdate(runopolyuser user)
         {
             try
@@ -67,8 +67,9 @@ namespace RunopolyWebAPI.Models
                                     "first_name = " + "'" + user.first_name + "', " +
                                     "last_name = " + "'" + user.last_name + "', " +
                                     "gender = " + "'" + user.gender + "', " +
-                                    "email = " + "'" + user.email + "' " +
-                                    "WHERE id = '" + user.id.ToString() + "'";
+                                    "email = " + "'" + user.email + "', " +
+                                    "LastLoginDate = " + user.lastlogindate +
+                                    " WHERE id = '" + user.id.ToString() + "'";
 
                 OdbcCommand myCommand = new OdbcCommand(strSQL, conn);
                 bool retVal = (1 == myCommand.ExecuteNonQuery());
@@ -81,23 +82,6 @@ namespace RunopolyWebAPI.Models
             finally
             {
                 conn.Close();
-            }
-        }
-        public bool AddUpdateUser(runopolyuser user)
-        {
-            bool success = false;
-            try
-            {
-
-                if (UserExists(user.id))
-                    success = UserUpdate(user);
-                else
-                    success = UserAdd(user);
-                return success;
-            }
-            catch
-            {
-                return false;
             }
         }
         public bool UserDelete(long id)
@@ -120,7 +104,7 @@ namespace RunopolyWebAPI.Models
                 return false;
             }
         }
-        public runopolyuser UserGet(int id)
+        public runopolyuser UserGet(long id)
         {
             runopolyuser returnUser = null;
             try

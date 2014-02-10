@@ -16,6 +16,7 @@ namespace RunopolyWebAPI.Models
       public string last_name { get; set; }
       public string gender { get; set; }
       public string email { get; set; }
+      public DateTime lastlogindate { get; set; }
     }
 
     public class runopolyarea
