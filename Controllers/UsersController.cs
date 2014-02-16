@@ -20,6 +20,7 @@ namespace RunopolyWebAPI.Controllers
             connector = _connector;
         }
         // GET api/user/5
+        [HttpGet]
         public runopolyuser Get(long id)
         {
             var user = connector.UserGet(id);
@@ -28,17 +29,18 @@ namespace RunopolyWebAPI.Controllers
             return user;
         }
         // POST profile
-        public HttpResponseMessage Post(runopolyuser user)
+        [HttpPost]
+        public runopolyuser Post(runopolyuser user)
         {
             user.lastlogindate = DateTime.Now;
-            connector.UserAdd(user);
-
-            var response = Request.CreateResponse(HttpStatusCode.Created, user);
-            response.Headers.Location = new Uri(Request.RequestUri,
-                Url.Route(null, new { id = user.id }));
-            return response;
+            long id = connector.UserAdd(user);
+            var returnuser = connector.UserGet(id);
+            if (returnuser == null)
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            return returnuser;
         }
         // PUT profile/5
+        [HttpPut]
         public runopolyuser Put(runopolyuser _user)
         {
             var user = connector.UserGet(_user.id);
@@ -50,6 +52,7 @@ namespace RunopolyWebAPI.Controllers
             return user;
         }
         // DELETE /api/user/5
+        [HttpDelete]
         public void Delete(long id)
         {
             var user = connector.UserGet(id);
@@ -58,6 +61,13 @@ namespace RunopolyWebAPI.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotFound);
 
             connector.UserDelete(user.id);
-        }  
+        }
+        [HttpOptions]
+        public HttpResponseMessage Options()
+        {
+            var response = new HttpResponseMessage();
+            response.StatusCode = HttpStatusCode.OK;
+            return response;
+        }
     }
 }

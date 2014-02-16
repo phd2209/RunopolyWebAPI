@@ -12,6 +12,7 @@ namespace RunopolyWebAPI.Models
     public class runopolyuser
     {
       public long id { get; set; }
+      public string nick_name { get; set; }
       public string first_name { get; set; }
       public string last_name { get; set; }
       public string gender { get; set; }
@@ -28,8 +29,28 @@ namespace RunopolyWebAPI.Models
         public int radius1 { get; set; }
         public int radius2 { get; set; }
         public int rotation { get; set; }
-        public string owner { get; set; }
+        public runopolyuser owner { get; set; }
         public int level { get; set; }
+        public bool isUserArea { get; set; }
+        public double TotalKm { get; set; }
+        public double UserKm { get; set; }
+    }
+
+    public class runopolyarearaw
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public double longitude { get; set; }
+        public double latitude { get; set; }
+        public int radius1 { get; set; }
+        public int radius2 { get; set; }
+        public int rotation { get; set; }
+        public int userid { get; set; }
+        public string first_name { get; set; }
+        public string last_name { get; set; }
+        public string nick_name { get; set; }
+        public string gender { get; set; }
+        public double areakm { get; set; }
     }
 
     public class runopolyrun
