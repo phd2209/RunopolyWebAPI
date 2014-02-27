@@ -27,6 +27,7 @@ namespace RunopolyWebAPI.Controllers
         //}
 
         // GET api/runs/5
+        [HttpGet]
         public IQueryable<runopolyrun> Get(long id)
         {
             var runs = connector.MyRunsGet(id);
@@ -34,7 +35,8 @@ namespace RunopolyWebAPI.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             return runs;
         }
-        // POST api/runs
+
+        [HttpPost]
         public HttpResponseMessage Post(runopolyrun run)
         {
             run.creationdate = DateTime.Now;
@@ -46,12 +48,6 @@ namespace RunopolyWebAPI.Controllers
             return response;
         }
 
-        // PUT api/runs/5
-        //public void Put(int id, [FromBody]string value)
-        //{
-        //}
-
-        // DELETE api/runs/5
         public void Delete(int id)
         {
             var run = connector.MyRunGet(id);

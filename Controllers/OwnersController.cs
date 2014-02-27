@@ -8,25 +8,25 @@ using RunopolyWebAPI.Models;
 
 namespace RunopolyWebAPI.Controllers
 {
-    public class AreasController : ApiController
+    public class OwnersController : ApiController
     {
         private readonly RunopolyConnector connector;
-        public AreasController()
+        public OwnersController()
             : this(new RunopolyConnector())
         {
         }
-        public AreasController(RunopolyConnector _connector)
+        public OwnersController(RunopolyConnector _connector)
         {
             connector = _connector;
         }
 
         [HttpGet]
-        public IQueryable<runopolyarea> Get(long id)
+        public IQueryable<runopolyowners> Get(long id)
         {
-            var area = connector.AreasGet(id);
-            if (area == null)
+            var owners = connector.OwnersGet(id);
+            if (owners == null)
                 throw new HttpResponseException(HttpStatusCode.NotFound);
-            return area;
+            return owners;
         }
 
         [HttpOptions]

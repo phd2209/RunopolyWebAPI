@@ -9,10 +9,29 @@ namespace RunopolyWebAPI
     {
         public static void Register(HttpConfiguration config)
         {
+            /*
+            config.Routes.MapHttpRoute(
+                name: "DefaultApi",
+                routeTemplate: "api/{controller}/{action}/{id}",
+                defaults: new { controller = "Runopoly", id = RouteParameter.Optional }
+            );
+            
+            config.Routes.MapHttpRoute(
+                name: "UpdateUser",
+                routeTemplate: "api/Users/UpdateUser/{id}/{_user}",
+                defaults: new { controller = "Users", action = "UpdateUser", id = RouteParameter.Optional, _user = RouteParameter.Optional }
+            );
+            */
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
+            );
+
+            config.Routes.MapHttpRoute(
+                name: "DefaultApiWithAction",
+                routeTemplate: "api/{controller}/{action}/{user}",
+                defaults: new { user = RouteParameter.Optional}
             );
 
             var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");

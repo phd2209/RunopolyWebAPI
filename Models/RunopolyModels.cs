@@ -28,10 +28,11 @@ namespace RunopolyWebAPI.Models
         public double latitude { get; set; }
         public int radius1 { get; set; }
         public int radius2 { get; set; }
-        public int rotation { get; set; }
+        public int rotation { get; set; }        
         public runopolyuser owner { get; set; }
         public int level { get; set; }
         public bool isUserArea { get; set; }
+        public double MaxKm { get; set; }
         public double TotalKm { get; set; }
         public double UserKm { get; set; }
     }
@@ -62,5 +63,20 @@ namespace RunopolyWebAPI.Models
         public double areakm { get; set; }
         public TimeSpan time { get; set; }
         public DateTime creationdate { get; set; }
+    }
+
+    public class runopolyowner
+    {
+        public runopolyuser owner { get; set; }
+        public bool isUser { get; set; }
+        public double UserKm { get; set; }
+    }
+
+    public class runopolyowners
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public double TotalKm { get; set; }
+        public List<runopolyowner> owners { get; set; } 
     }
 }

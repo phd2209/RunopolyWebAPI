@@ -193,18 +193,18 @@ namespace RunopolyWebAPI.Models
                 }
                 myReader1.Close();
                 conn.Close();
-                return (from t in GroupByUserArea(id, tempresult.AsEnumerable()) select t).OrderBy(t => t.id).ThenByDescending(t => t.UserKm).AsQueryable();
+                return (from t in GroupByArea(id, tempresult.AsEnumerable()) select t).OrderBy(t => t.id).ThenByDescending(t => t.UserKm).AsQueryable();
             }
             catch
             {
                 return null;
             }
         }
-        public IEnumerable<runopolyarea> GroupByUserArea(long id, IEnumerable<runopolyarearaw> rawareas)
+        public IEnumerable<runopolyarea> GroupByArea(long id, IEnumerable<runopolyarearaw> rawareas)
         {
             return from e in rawareas
-                   group e by new { /*e.userid,*/ e.id } into g
-                   orderby g.Key.id/*, g.Key.userid*/
+                   group e by new { e.id } into g
+                   orderby g.Key.id
                    select new runopolyarea
                    {
                        id = g.Key.id,
@@ -216,7 +216,8 @@ namespace RunopolyWebAPI.Models
                        rotation = g.FirstOrDefault().rotation,
                        level = g.Count(c => c.id > 0),
                        isUserArea = g.Any(c => c.userid == id),
-                       TotalKm = g.Max(c => c.areakm),
+                       MaxKm = g.Max(c => c.areakm),
+                       TotalKm = Math.Round(g.Sum(c => c.areakm),1),
                        UserKm = g.Where(c => c.userid == id).Sum(c => c.areakm),
                        owner = new runopolyuser {
                            nick_name = g.FirstOrDefault().nick_name,
@@ -337,7 +338,7 @@ namespace RunopolyWebAPI.Models
                     run.areaid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("areaid")).ToString());
                     run.totalkm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("totalkm")).ToString());
                     run.areakm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("areakm")).ToString());
-                    run.time = TimeSpan.Parse(myReader1.GetValue(myReader1.GetOrdinal("time")).ToString());
+                    //run.time = TimeSpan.Parse(myReader1.GetValue(myReader1.GetOrdinal("time")).ToString());
                     run.creationdate = myReader1.GetDate(myReader1.GetOrdinal("creationdate"));
                     runs.Add(run);
                 }
@@ -392,6 +393,79 @@ namespace RunopolyWebAPI.Models
         public string toMySQLDateTime(DateTime date)
         {
             return date.ToString("yyyy-MM-dd H:mm:ss");
+        }  
+        // Owner functions
+        public IQueryable<runopolyowners> OwnersGet(long userid)
+        {
+            conn.Open();
+            try
+            {
+                string strSQL1 = "SELECT " +
+                                    " a.id, " +
+                                    " a.name," +
+                                    " b.nick_name, " +
+                                    " b.first_name, " +
+                                    " b.last_name, " +
+                                    " b.gender, " +
+                                    " c.areakm, " +
+                                    " c.userid " +
+                                 "from runopoly_areas a " +
+                                 "left join runopoly_runs c " +
+                                 "on a.id = c.areaid " +
+                                 "left join runopoly_users b " +
+                                 "on c.userid = b.id";
+
+                OdbcCommand myCommand1 = new OdbcCommand(strSQL1, conn);
+                OdbcDataReader myReader1 = myCommand1.ExecuteReader();
+                List<runopolyarearaw> tempresult = new List<runopolyarearaw>();
+                    
+                while (myReader1.Read())
+                {
+                    runopolyarearaw area = new runopolyarearaw();
+                    area.id = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("id")).ToString());
+                    area.name = myReader1.GetValue(myReader1.GetOrdinal("name")).ToString();
+                    area.nick_name = myReader1.GetValue(myReader1.GetOrdinal("nick_name")).ToString();
+                    area.first_name = myReader1.GetValue(myReader1.GetOrdinal("first_name")).ToString();
+                    area.last_name =  myReader1.GetValue(myReader1.GetOrdinal("last_name")).ToString();
+                    area.gender = myReader1.GetValue(myReader1.GetOrdinal("gender")).ToString();
+                    area.areakm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("areakm")).ToString());
+                    area.userid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("userid")).ToString());
+                    tempresult.Add(area);
+                }
+                myReader1.Close();
+                conn.Close();
+                return (from t in GroupByOwner(userid, tempresult.AsEnumerable()) select t).OrderBy(t => t.id).AsQueryable();
+            }
+            catch
+            {
+                return null;
+            }
         }
+        public IEnumerable<runopolyowners> GroupByOwner(long id, IEnumerable<runopolyarearaw> rawareas)
+        {
+            return from e in rawareas
+                   group e by new { e.id } into g
+                   orderby g.Key.id
+                   select new runopolyowners
+                   {
+                       id = g.Key.id,
+                       name = g.FirstOrDefault().name,
+                       TotalKm = Math.Round(g.Sum(c => c.areakm), 1),
+                       owners = (from f in g
+                                 group f by new { f.userid } into u
+                                    select new runopolyowner {
+                                        UserKm = Math.Round(u.Sum(c => c.areakm),1),
+                                        isUser = u.Any(c => c.userid == id),
+                                         owner = new runopolyuser {
+                                          nick_name = u.FirstOrDefault().nick_name,
+                                          first_name = u.FirstOrDefault().first_name,
+                                          last_name = u.FirstOrDefault().last_name,
+                                          gender = u.FirstOrDefault().gender,
+                                          id = u.Key.userid
+                                         }
+                                    }).OrderBy(t => -t.UserKm).ToList()
+                   };
+        }
+  
   }
 }

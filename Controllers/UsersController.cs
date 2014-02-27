@@ -19,6 +19,7 @@ namespace RunopolyWebAPI.Controllers
         {
             connector = _connector;
         }
+        
         // GET api/user/5
         [HttpGet]
         public runopolyuser Get(long id)
@@ -28,6 +29,7 @@ namespace RunopolyWebAPI.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             return user;
         }
+        
         // POST profile
         [HttpPost]
         public runopolyuser Post(runopolyuser user)
@@ -39,19 +41,37 @@ namespace RunopolyWebAPI.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             return returnuser;
         }
-        // PUT profile/5
-        [HttpPut]
-        public runopolyuser Put(runopolyuser _user)
-        {
-            var user = connector.UserGet(_user.id);
 
-            if (user == null)
+        [HttpPut]
+        public runopolyuser UpdateUser(runopolyuser user)
+        {
+            var _user = connector.UserGet(user.id);
+
+            if (_user == null)
                 throw new HttpResponseException(HttpStatusCode.NotFound);
 
-            connector.UserUpdate(_user);
-            return user;
+            connector.UserUpdate(user);
+            var returnuser = connector.UserGet(user.id);
+            if (returnuser == null)
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            return returnuser;
+        }        
+
+        // PUT profile/5
+        [HttpPost]
+        public runopolyuser UpdateUser(runopolyuser user, long? id)
+        {
+            var _user = connector.UserGet(user.id);
+
+            if (_user == null)
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+
+            connector.UserUpdate(user);
+            var returnuser = connector.UserGet(user.id);
+            if (returnuser == null)
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            return returnuser;
         }
-        // DELETE /api/user/5
         [HttpDelete]
         public void Delete(long id)
         {
@@ -62,6 +82,7 @@ namespace RunopolyWebAPI.Controllers
 
             connector.UserDelete(user.id);
         }
+        
         [HttpOptions]
         public HttpResponseMessage Options()
         {
