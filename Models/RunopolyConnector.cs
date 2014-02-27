@@ -219,6 +219,7 @@ namespace RunopolyWebAPI.Models
                        MaxKm = g.Max(c => c.areakm),
                        TotalKm = Math.Round(g.Sum(c => c.areakm),1),
                        UserKm = g.Where(c => c.userid == id).Sum(c => c.areakm),
+                       NoRuns = g.Count(),
                        owner = new runopolyuser {
                            nick_name = g.FirstOrDefault().nick_name,
                            first_name = g.FirstOrDefault().first_name,
@@ -454,9 +455,10 @@ namespace RunopolyWebAPI.Models
                        owners = (from f in g
                                  group f by new { f.userid } into u
                                     select new runopolyowner {
-                                        UserKm = Math.Round(u.Sum(c => c.areakm),1),
-                                        isUser = u.Any(c => c.userid == id),
-                                         owner = new runopolyuser {
+                                          NoRuns = u.Count(),
+                                          UserKm = Math.Round(u.Sum(c => c.areakm),1),
+                                          isUser = u.Any(c => c.userid == id),
+                                          owner = new runopolyuser {
                                           nick_name = u.FirstOrDefault().nick_name,
                                           first_name = u.FirstOrDefault().first_name,
                                           last_name = u.FirstOrDefault().last_name,

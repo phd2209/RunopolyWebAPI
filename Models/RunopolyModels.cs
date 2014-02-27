@@ -35,6 +35,7 @@ namespace RunopolyWebAPI.Models
         public double MaxKm { get; set; }
         public double TotalKm { get; set; }
         public double UserKm { get; set; }
+        public int NoRuns { get; set; }
     }
 
     public class runopolyarearaw
@@ -70,6 +71,7 @@ namespace RunopolyWebAPI.Models
         public runopolyuser owner { get; set; }
         public bool isUser { get; set; }
         public double UserKm { get; set; }
+        public int NoRuns { get; set; }
     }
 
     public class runopolyowners
