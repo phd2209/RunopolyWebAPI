@@ -37,7 +37,7 @@ namespace RunopolyWebAPI.Controllers
         }
 
         [HttpPost]
-        public HttpResponseMessage Post(runopolyrun run)
+        public HttpResponseMessage Post(runopolyrunraw run)
         {
             run.creationdate = DateTime.Now;
             connector.RunAdd(run);

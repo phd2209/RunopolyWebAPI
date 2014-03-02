@@ -30,7 +30,7 @@ namespace RunopolyWebAPI.Models
         public int radius2 { get; set; }
         public int rotation { get; set; }        
         public runopolyuser owner { get; set; }
-        public int level { get; set; }
+        public int NoRunners { get; set; }
         public bool isUserArea { get; set; }
         public double MaxKm { get; set; }
         public double TotalKm { get; set; }
@@ -57,12 +57,33 @@ namespace RunopolyWebAPI.Models
 
     public class runopolyrun
     {
+        public int runid { get; set; }
+        public long userid { get; set; }
+        public double totalkm { get; set; }
+        public int duration { get; set; }
+        public DateTime startdate { get; set; }
+        public DateTime creationdate { get; set; }
+        public List<runopolyarearun> areascovered { get; set; }
+    }
+
+    public class runopolyarearun
+    {
+        public int areaid { get; set; }
+        public string areaname { get; set; }
+        public double areakm { get; set; }
+    }
+
+    public class runopolyrunraw
+    {
         public int id { get; set; }
+        public int runid { get; set; }
         public long userid { get; set; }
         public int areaid { get; set; }
+        public string areaname { get; set; }
         public double totalkm { get; set; }
         public double areakm { get; set; }
-        public TimeSpan time { get; set; }
+        public int duration { get; set; }
+        public DateTime startdate { get; set; }
         public DateTime creationdate { get; set; }
     }
 
@@ -72,6 +93,7 @@ namespace RunopolyWebAPI.Models
         public bool isUser { get; set; }
         public double UserKm { get; set; }
         public int NoRuns { get; set; }
+        public double RunPct { get; set; }
     }
 
     public class runopolyowners

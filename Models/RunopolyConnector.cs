@@ -214,7 +214,7 @@ namespace RunopolyWebAPI.Models
                        radius1 = g.FirstOrDefault().radius1,
                        radius2 = g.FirstOrDefault().radius2,
                        rotation = g.FirstOrDefault().rotation,
-                       level = g.Count(c => c.id > 0),
+                       NoRunners = g.Select(l => l.userid).Distinct().Count(),
                        isUserArea = g.Any(c => c.userid == id),
                        MaxKm = g.Max(c => c.areakm),
                        TotalKm = Math.Round(g.Sum(c => c.areakm),1),
@@ -263,20 +263,21 @@ namespace RunopolyWebAPI.Models
         */
 
         // Run functions
-        public bool RunAdd(runopolyrun run)
+        public bool RunAdd(runopolyrunraw run)
         {
             conn.Open();
             bool retVal = false;
             try
             {
-                string strSQL = "INSERT INTO runopoly_runs (id, userid, areaid, totalkm, areakm, time, creationdate) VALUES (" +
-                                    run.id.ToString() + ", " +
+                string strSQL = "INSERT INTO runopoly_runs (runid, userid, areaid, totalkm, areakm, duration, startdate, creationdate) VALUES (" +
+                                    run.runid.ToString() + ", " +
                                     run.userid.ToString() + ", " +
                                     run.areaid.ToString() + ", " +
                                     run.totalkm.ToString() + ", " +
                                     run.areakm.ToString() + ", " +
-                                    run.time + ", " +
-                                    run.creationdate;
+                                    run.duration.ToString() + ", " +
+                                    "'" + toMySQLDateTime(run.startdate) + "'," +
+                                    "'" + toMySQLDateTime(run.creationdate) + "')";
 
                 OdbcCommand myCommand = new OdbcCommand(strSQL, conn);
                 retVal = (1 == myCommand.ExecuteNonQuery());
@@ -317,69 +318,103 @@ namespace RunopolyWebAPI.Models
             try
             {
                 string strSQL1 = "SELECT " +
-                                   "id, " +
-                                   "userid, " +
-                                   "areaid, " +
-                                   "totalkm, " +
-                                   "areakm, " +
-                                   "time, " +
-                                   "creationdate " +
-                                 "from runopoly_runs " +
-                                 "where userid=" + userid.ToString();
+                                   "a.id, " +
+                                   "a.runid, " +
+                                   "a.userid, " +
+                                   "a.areaid, " +
+                                   "a.totalkm, " +
+                                   "a.areakm, " +
+                                   "a.duration, " +
+                                   "a.startdate, " +
+                                   "a.creationdate, " +
+                                   "b.name " +
+                                 "from runopoly_runs a " +
+                                 "left join runopoly_areas b " +
+                                 "on a.areaid = b.id " +
+                                 "where a.userid=" + userid.ToString();
 
                 OdbcCommand myCommand1 = new OdbcCommand(strSQL1, conn);
                 OdbcDataReader myReader1 = myCommand1.ExecuteReader();
-                List<runopolyrun> runs = new List<runopolyrun>();
+                List<runopolyrunraw> runs = new List<runopolyrunraw>();
 
                 while (myReader1.Read())
                 {
-                    runopolyrun run = new runopolyrun();
+                    runopolyrunraw run = new runopolyrunraw();
                     run.id = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("id")).ToString());
+                    run.runid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("runid")).ToString());
                     run.userid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("userid")).ToString());
                     run.areaid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("areaid")).ToString());
+                    run.areaname = myReader1.GetValue(myReader1.GetOrdinal("name")).ToString();
                     run.totalkm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("totalkm")).ToString());
                     run.areakm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("areakm")).ToString());
-                    //run.time = TimeSpan.Parse(myReader1.GetValue(myReader1.GetOrdinal("time")).ToString());
+                    run.duration = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("duration")).ToString());
+                    run.startdate = myReader1.GetDate(myReader1.GetOrdinal("startdate"));
                     run.creationdate = myReader1.GetDate(myReader1.GetOrdinal("creationdate"));
                     runs.Add(run);
                 }
                 myReader1.Close();
                 conn.Close();
-                return runs.AsQueryable() ;
+                return (from t in GroupByRunId(runs.AsEnumerable()) select t).OrderBy(t => t.runid).AsQueryable();
             }
             catch
             {
                 return null;
             }
         }
-        public runopolyrun MyRunGet(int id)
+        public IEnumerable<runopolyrun> GroupByRunId(IEnumerable<runopolyrunraw> rawruns)
+        {
+            return from e in rawruns
+                   group e by new { e.runid } into g
+                   orderby g.Key.runid
+                   select new runopolyrun
+                   {
+                       runid = g.Key.runid,
+                       totalkm = g.FirstOrDefault().totalkm,
+                       userid = g.FirstOrDefault().userid,
+                       duration = g.FirstOrDefault().duration,
+                       startdate = g.FirstOrDefault().startdate,
+                       creationdate = g.FirstOrDefault().creationdate,
+                       areascovered = (from f in g
+                                       select new runopolyarearun
+                                 {
+                                     areaid = f.areaid,
+                                     areaname = f.areaname,
+                                     areakm = f.areakm
+                                 }).OrderBy(f => -f.areakm).ToList()
+                   };
+        }
+        public runopolyrunraw MyRunGet(int id)
         {
             conn.Open();
             try
             {
                 string strSQL1 = "SELECT " +
                                    "id, " +
+                                   "runid, " +
                                    "userid, " +
                                    "areaid, " +
                                    "totalkm, " +
                                    "areakm, " +
-                                   "time, " +
+                                   "duration, " +
+                                   "startdate " +
                                    "creationdate " +
                                  "from runopoly_runs " +
                                  "where id=" + id.ToString();
 
                 OdbcCommand myCommand1 = new OdbcCommand(strSQL1, conn);
                 OdbcDataReader myReader1 = myCommand1.ExecuteReader();
-                runopolyrun run = new runopolyrun();
+                runopolyrunraw run = new runopolyrunraw();
 
                 while (myReader1.Read())
                 {
                     run.id = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("id")).ToString());
+                    run.runid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("runid")).ToString());
                     run.userid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("userid")).ToString());
                     run.areaid = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("areaid")).ToString());
                     run.totalkm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("totalkm")).ToString());
                     run.areakm = Double.Parse(myReader1.GetValue(myReader1.GetOrdinal("areakm")).ToString());
-                    run.time = TimeSpan.Parse(myReader1.GetValue(myReader1.GetOrdinal("time")).ToString());
+                    run.duration = Int32.Parse(myReader1.GetValue(myReader1.GetOrdinal("duration")).ToString());
+                    run.startdate = myReader1.GetDate(myReader1.GetOrdinal("startdate"));
                     run.creationdate = myReader1.GetDate(myReader1.GetOrdinal("creationdate"));
                 }
                 myReader1.Close();
@@ -391,10 +426,7 @@ namespace RunopolyWebAPI.Models
                 return null;
             }
         }
-        public string toMySQLDateTime(DateTime date)
-        {
-            return date.ToString("yyyy-MM-dd H:mm:ss");
-        }  
+        
         // Owner functions
         public IQueryable<runopolyowners> OwnersGet(long userid)
         {
@@ -458,6 +490,7 @@ namespace RunopolyWebAPI.Models
                                           NoRuns = u.Count(),
                                           UserKm = Math.Round(u.Sum(c => c.areakm),1),
                                           isUser = u.Any(c => c.userid == id),
+                                          RunPct = Math.Round((u.Sum(c => c.areakm) / g.Sum(c => c.areakm)) * 100, 1),
                                           owner = new runopolyuser {
                                           nick_name = u.FirstOrDefault().nick_name,
                                           first_name = u.FirstOrDefault().first_name,
@@ -469,5 +502,10 @@ namespace RunopolyWebAPI.Models
                    };
         }
   
+        //Helper functions
+        public string toMySQLDateTime(DateTime date)
+        {
+            return date.ToString("yyyy-MM-dd H:mm:ss");
+        }  
   }
 }
